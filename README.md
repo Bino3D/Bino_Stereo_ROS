@@ -60,7 +60,7 @@ $ source ~/.bashrc
 $ ll /dev/video*
 插入摄像头
 $ ll /dev/video*
-$ roscd catkin_ws
+$ cd <your catkin_ws path>
 $ vim src/bino_stereo_ros/launch/bino_stereo.launch
     <param name="video_device" value="/dev/video1"/> 
 改为<param name="video_device" value="/dev/<video_yours>"/>
@@ -71,7 +71,7 @@ $ vim src/bino_stereo_ros/launch/bino_stereo.launch
 * 将Bino_Stereo_ROS/launch/bino_stereo.launch中的extrinsic_file参数的值修改为本机相机标定外参的绝对路径
 
 ```
-$roscd catkin_ws
+$cd <your catkin_ws path>
 $cd src/Bino_Stereo_ROS/params
 $pwd
 /home/li/catkin_ws/src/Bino_Stereo_ROS/params
