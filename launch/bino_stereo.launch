@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<node name="bino_stereo" pkg="bino_stereo_ros" type="bino_stereo_ros" output="screen" >
+		<param name="framerate_"        value="60"/> 
+		<param name="video_device" 	    value="/dev/video1" />
+		<param name="camera_frame_id"   value="bino_camera" />
+		<param name="intrinsuc_file"    type="string"      value="/home/li/catkin_ws/src/Bino_Stereo_ROS/params/intrinsics.yml"/> 
+		<param name="extrinsic_file"    type="string"      value="/home/li/catkin_ws/src/Bino_Stereo_ROS/params/extrinsics.yml"/> 
+	</node>
+	<node name="base2camera" pkg="tf" type="static_transform_publisher" args=
+		"0.0 0.0 0.0  0 0 0 1  /base_link /bino_camera 10"/> 
+</launch>

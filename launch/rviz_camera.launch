@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bino_stereo_ros)/rviz/bino_camera.rviz"/>
+</launch>
