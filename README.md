@@ -46,6 +46,8 @@ $ cd src
 $ git clone https://github.com/Bino3D/Bino_Stereo_ROS
 $ cd ..
 $ catkin_make
+$ echo "source <your catkin_ws path>/devel/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc 
 ```
 * 若无catkin_ws,[参照此链接建立catkin_ws](http://wiki.ros.org/catkin/Tutorials/create_a_workspace)
 
