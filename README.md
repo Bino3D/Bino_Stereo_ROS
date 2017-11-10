@@ -41,7 +41,7 @@ $sudo apt-get install ros-kinetic-desktop-full
 * 将binocamera的ros驱动包放入用户自己的ros工作空间catkin_ws中，使用catkin_make进行编译
 
 ```
-$ roscd catkin_ws
+$ cd <your catkin_ws path>
 $ cd src
 $ git clone https://github.com/Bino3D/Bino_Stereo_ROS
 $ cd ..
