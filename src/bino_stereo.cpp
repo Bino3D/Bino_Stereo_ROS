@@ -108,23 +108,23 @@ int main(int argc, char **argv)
 		//raw image publish
 		left_raw->header.stamp = ros::Time::now();
 		left_raw->header.frame_id=frame_id;
-		right_raw->header.stamp = ros::Time::now();
+		right_raw->header.stamp = left_raw->header.stamp;  //ros::Time::now();
 		right_raw->header.frame_id=frame_id;
 		left_pub.publish(left_raw); 
 		right_pub.publish(right_raw); 
 
 		//rect image publish
-		left_rect->header.stamp = ros::Time::now();
+		left_rect->header.stamp = left_raw->header.stamp; //ros::Time::now();
 		left_rect->header.frame_id=frame_id;
-		right_rect->header.stamp = ros::Time::now();
+		right_rect->header.stamp = left_raw->header.stamp; //ros::Time::now();
 		right_rect->header.frame_id=frame_id;
 		left_rect_pub.publish(left_rect); 
 		right_rect_pub.publish(right_rect); 
 
 		//camera info publish
-		left_info->header.stamp = ros::Time::now();
+		left_info->header.stamp = left_raw->header.stamp; //ros::Time::now();
 		left_info->header.frame_id=frame_id;
-		right_info->header.stamp = ros::Time::now();
+		right_info->header.stamp =left_raw->header.stamp; //ros::Time::now();
 		right_info->header.frame_id=frame_id;
 		left_info_pub.publish(left_info);
 		right_info_pub.publish(right_info);
