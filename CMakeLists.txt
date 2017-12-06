@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(bino_stereo_ros)
 
+if(DEFINED ENV{BINO_STEREO_SDK})
+set(BINO_SDK_DIR $ENV{BINO_STEREO_SDK})
+else()
+  message(FATAL_ERROR "BINO_STEREO_SDK environment variable not found.")
+endif()
+set(BINO_SDK_LIB_DIR ${BINO_SDK_DIR}/lib)
+
 # Check C++11 or C++0x support
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -50,14 +57,19 @@ catkin_package(
 
 include_directories(include
 	${catkin_INCLUDE_DIRS}
+	${BINO_SDK_DIR}/include
 	)
 
+link_directories(
+  ${OpenCV_LIBRARY_DIRS}
+  ${BINO_SDK_LIB_DIR}
+)
 
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 ## Declare a cpp executable
 add_executable(bino_stereo_ros src/bino_stereo.cpp)
 target_link_libraries(bino_stereo_ros
-	${PROJECT_SOURCE_DIR}/lib/libBinoCamera.so
+	${BINO_SDK_LIB_DIR}/libBino_Stereo_SDK.so
 	${catkin_LIBRARIES}
 	${OpenCV_LIBS} 
 	)
