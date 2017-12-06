@@ -1,7 +1,7 @@
 # Bino_Stereo_ROS
 ## 1.使用前准备
 #### 1.1 下载并配置Bino_Stereo_SDK
-下载及配置方法路径: [链接](https://github.com/Bino3D/Bino_Stereo_SDK)
+下载及配置链接: [链接](https://github.com/Bino3D/Bino_Stereo_SDK)
 
 #### 1.2 安装ROS
 
