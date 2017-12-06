@@ -18,7 +18,7 @@ $sudo apt-get install ros-kinetic-desktop-full
 ```
 $ roscd catkin_ws
 $ cd src
-$ git clone <http:://>
+$ git clone https://github.com/Bino3D/Bino_Stereo_ROS.git
 $ cd ..
 $ catkin_make
 ```
