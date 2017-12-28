@@ -73,3 +73,4 @@ target_link_libraries(bino_stereo_ros
 	${catkin_LIBRARIES}
 	${OpenCV_LIBS} 
 	)
+

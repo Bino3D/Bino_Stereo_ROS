@@ -80,9 +80,9 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "bino_stereo");
 	ros::NodeHandle node_;
 	ros::NodeHandle nh("~");
-    BinoCameraParameterList paraList;
+	BinoCameraParameterList paraList;
 	nh.param("video_device",paraList.devPath, std::string("/dev/video0"));
-	nh.param("framerate", framerate_, 60);
+	nh.param("framerate", framerate_, 30);
 	nh.param("camera_left_frame_id",left_frame_id, std::string("/bino_left_frame"));
 	nh.param("camera_right_frame_id",right_frame_id, std::string("/bino_right_frame"));
 	nh.param("camera_imu_frame_id",imu_frame_id, std::string("/bino_imu_frame"));
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 	camera->setImuCorrection(deadmin,deadmax,axerr,ayerr,azerr);
 	//get camera info
 	getCameraInfo(left_info,right_info);
-	ros::Rate loop_rate(framerate_);
+	//ros::Rate loop_rate(framerate_);
 	ros::Publisher left_pub = node_.advertise<sensor_msgs::Image>("/bino_camera/left/image_raw", 1);//原始双目图像数据
 	ros::Publisher right_pub = node_.advertise<sensor_msgs::Image>("/bino_camera/right/image_raw", 1);
 	ros::Publisher left_rect_pub = node_.advertise<sensor_msgs::Image>("/bino_camera/left/image_rect", 1);//校正过的双目图像数据
@@ -105,14 +105,36 @@ int main(int argc, char **argv)
 	ros::Publisher right_info_pub = node_.advertise<sensor_msgs::CameraInfo>("/bino_camera/right/camera_info", 1);
 	ros::Publisher imu_pub = node_.advertise<sensor_msgs::Imu>("/bino_camera/ImuData", 1);//IMU数据
 	sensor_msgs::ImagePtr left_raw,right_raw,left_rect,right_rect;
-    sensor_msgs::Imu imu_msg;
-	
+	sensor_msgs::Imu imu_msg;
+	imu_msg.linear_acceleration_covariance[0] = 0.04;
+	imu_msg.linear_acceleration_covariance[1] = 0;
+	imu_msg.linear_acceleration_covariance[2] = 0;
+
+	imu_msg.linear_acceleration_covariance[3] = 0;
+	imu_msg.linear_acceleration_covariance[4] = 0.04;
+	imu_msg.linear_acceleration_covariance[5] = 0;
+
+	imu_msg.linear_acceleration_covariance[6] = 0;
+	imu_msg.linear_acceleration_covariance[7] = 0;
+	imu_msg.linear_acceleration_covariance[8] = 0.04;
+
+	imu_msg.angular_velocity_covariance[0] = 0.02;
+	imu_msg.angular_velocity_covariance[1] = 0;
+	imu_msg.angular_velocity_covariance[2] = 0;
+
+	imu_msg.angular_velocity_covariance[3] = 0;
+	imu_msg.angular_velocity_covariance[4] = 0.02;
+	imu_msg.angular_velocity_covariance[5] = 0;
+
+	imu_msg.angular_velocity_covariance[6] = 0;
+	imu_msg.angular_velocity_covariance[7] = 0;
+	imu_msg.angular_velocity_covariance[8] = 0.02;
 	cv::Mat gray_l,gray_r;
 	std::vector<ImuData> imudatas;
 	ImuData imudata;
 	ros::Time image_ros_time;
 	bool image_useimu = false;
-	int32_t timestamp_cam = 0,timestamp_cam_pre = 0,cam_time_beg = -1;
+	uint32_t timestamp_cam = 0,timestamp_cam_pre = 0,cam_time_beg = -1;
 	double timestamp_ros = 0,timestamp_ros_pre = 0,ros_time_beg = 0;
 	double timestamp_offset = 0;
 	double offset = 0;
@@ -122,27 +144,73 @@ int main(int argc, char **argv)
 		int image_rect_SubNumber = left_rect_pub.getNumSubscribers();
 		int image_info_SubNumber = left_info_pub.getNumSubscribers();
 		int imu_SubNumber = imu_pub.getNumSubscribers();
+		camera->Grab();
 		ros::Time time;
-		if(imu_SubNumber > 0 && image_useimu){
-			time = image_ros_time;
+		time = ros::Time::now(); 
+		if(imu_SubNumber > 0){
+			camera->getImuRawData(imudatas,timestamp_cam);
+			timestamp_ros = ros::Time::now().toSec();
+			if(cam_time_beg = -1){
+				cam_time_beg = imudatas[0].time;
+				ros_time_beg = timestamp_ros;
+			}
+			ros::Time time_cam(ros_time_beg + (timestamp_cam - cam_time_beg)*0.001f);
+			time = time_cam;
+			if(image_raw_SubNumber > 0){
+				//get the stereo raw image
+				camera->getOrgImage(gray_l, gray_r);
+
+				//mat->sensor_msgs
+				left_raw = cv_bridge::CvImage(std_msgs::Header(), "mono8", gray_l).toImageMsg();
+				right_raw = cv_bridge::CvImage(std_msgs::Header(), "mono8", gray_r).toImageMsg();
+
+				//raw image publish
+				left_raw->header.stamp = time;
+				left_raw->header.frame_id=left_frame_id;
+				right_raw->header.stamp = time;
+				right_raw->header.frame_id=right_frame_id;
+				left_pub.publish(left_raw); 
+				right_pub.publish(right_raw); 
+			}
+			size_t size = imudatas.size();
+			for (size_t i = 0, n = size-1; i <= n; ++i) {
+				imudata = imudatas[i];
+				ros::Time imu_ros_time(ros_time_beg + (imudata.time - cam_time_beg)*0.001f); 
+				//std::cout << "time" << imu_ros_time << ", offset: " << offset_fix << std::endl;
+				imu_msg.header.stamp = imu_ros_time;
+				imu_msg.header.frame_id = imu_frame_id;
+
+				imu_msg.linear_acceleration.x = imudata.accel_x * 9.8;
+				imu_msg.linear_acceleration.y = imudata.accel_y * 9.8;
+				imu_msg.linear_acceleration.z = imudata.accel_z * 9.8;
+
+				imu_msg.angular_velocity.x = imudata.gyro_x;
+				imu_msg.angular_velocity.y = imudata.gyro_y;
+				imu_msg.angular_velocity.z = imudata.gyro_z;
+
+				imu_pub.publish(imu_msg);
+				ros::Duration(0.001).sleep();
+			}
+
 		}else{
-			time = ros::Time::now(); 
-		}
-		if(image_raw_SubNumber > 0){
-			//get the stereo raw image
-			camera->getOrgImage(gray_l, gray_r);
+			cam_time_beg = -1;
+			if(image_raw_SubNumber > 0){
+				//get the stereo raw image
+				camera->getOrgImage(gray_l, gray_r);
 
-			//mat->sensor_msgs
-			left_raw = cv_bridge::CvImage(std_msgs::Header(), "mono8", gray_l).toImageMsg();
-			right_raw = cv_bridge::CvImage(std_msgs::Header(), "mono8", gray_r).toImageMsg();
+				//mat->sensor_msgs
+				left_raw = cv_bridge::CvImage(std_msgs::Header(), "mono8", gray_l).toImageMsg();
+				right_raw = cv_bridge::CvImage(std_msgs::Header(), "mono8", gray_r).toImageMsg();
 
-			//raw image publish
-			left_raw->header.stamp = time;
-			left_raw->header.frame_id=left_frame_id;
-			right_raw->header.stamp = time;
-			right_raw->header.frame_id=right_frame_id;
-			left_pub.publish(left_raw); 
-			right_pub.publish(right_raw); 
+				//raw image publish
+				left_raw->header.stamp = time;
+				left_raw->header.frame_id=left_frame_id;
+				right_raw->header.stamp = time;
+				right_raw->header.frame_id=right_frame_id;
+				left_pub.publish(left_raw); 
+				right_pub.publish(right_raw); 
+			}
+
 		}
 
 		if(image_rect_SubNumber > 0){
@@ -172,78 +240,9 @@ int main(int argc, char **argv)
 			right_info_pub.publish(right_info);
 		}
 
-		if(imu_SubNumber > 0){
-			camera->getImuRawData(imudatas,timestamp_cam);
-			timestamp_ros = ros::Time::now().toSec();
-			if(cam_time_beg = -1){
-				cam_time_beg = timestamp_cam;
-				ros_time_beg = timestamp_ros;
-			}
-			if(timestamp_cam_pre > 0){
-				offset = ((timestamp_cam - timestamp_cam_pre)*0.001f) - (timestamp_ros - timestamp_ros_pre);
-			}
-			timestamp_cam_pre = timestamp_cam;
-			timestamp_ros_pre = timestamp_ros;
-			int size = imudatas.size();
-			double offset_each = offset/size;
-			for(int i = 0; i < size; i++){
-				imudata = imudatas[i];
-				double offset_fix = timestamp_offset + offset_each * i;
-				ros::Time imu_ros_time(ros_time_beg + (imudata.time - cam_time_beg)*0.001f - offset_fix); 
-				imu_msg.header.stamp = imu_ros_time;
-				imu_msg.header.frame_id = imu_frame_id;
-
-				imu_msg.linear_acceleration.x = imudata.accel_x * 9.8;
-				imu_msg.linear_acceleration.y = imudata.accel_y * 9.8;
-				imu_msg.linear_acceleration.z = imudata.accel_z * 9.8;
-
-				imu_msg.linear_acceleration_covariance[0] = 0.04;
-				imu_msg.linear_acceleration_covariance[1] = 0;
-				imu_msg.linear_acceleration_covariance[2] = 0;
-
-				imu_msg.linear_acceleration_covariance[3] = 0;
-				imu_msg.linear_acceleration_covariance[4] = 0.04;
-				imu_msg.linear_acceleration_covariance[5] = 0;
-
-				imu_msg.linear_acceleration_covariance[6] = 0;
-				imu_msg.linear_acceleration_covariance[7] = 0;
-				imu_msg.linear_acceleration_covariance[8] = 0.04;
-
-				imu_msg.angular_velocity.x = imudata.gyro_x;
-				imu_msg.angular_velocity.y = imudata.gyro_y;
-				imu_msg.angular_velocity.z = imudata.gyro_z;
-
-				imu_msg.angular_velocity_covariance[0] = 0.02;
-				imu_msg.angular_velocity_covariance[1] = 0;
-				imu_msg.angular_velocity_covariance[2] = 0;
-
-				imu_msg.angular_velocity_covariance[3] = 0;
-				imu_msg.angular_velocity_covariance[4] = 0.02;
-				imu_msg.angular_velocity_covariance[5] = 0;
-
-				imu_msg.angular_velocity_covariance[6] = 0;
-				imu_msg.angular_velocity_covariance[7] = 0;
-				imu_msg.angular_velocity_covariance[8] = 0.02;
-
-				imu_pub.publish(imu_msg);
-				
-				if(i = size - 1){
-					image_ros_time = imu_ros_time;
-				}
-			}
-				timestamp_offset += offset;
-				image_useimu = true;
-
-		}else{
-			image_useimu = false;
-			cam_time_beg = -1;
-			timestamp_cam_pre = 0;
-			timestamp_offset = 0;
-			offset = 0;
-		}
 
 		ros::spinOnce(); 
-		loop_rate.sleep();
+		//	loop_rate.sleep();
 	}
 	return true;
 }

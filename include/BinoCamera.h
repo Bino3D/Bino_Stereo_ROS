@@ -28,15 +28,15 @@ struct BinoCameraParameterList{
  *@brief imu数据结构体 
  * */
 struct ImuData{
-    int32_t time;/**< 采集imu数据的时间*/
+    uint32_t time;/**< 采集imu数据的时间*/
 
-    float accel_x; /**< imu加速度计x，y，z轴数据，单位（g）*/
-    float accel_y;
-    float accel_z;
+    float accel_x; /**< imu加速度计x轴数据，单位（g）*/
+    float accel_y; /**< imu加速度计y轴数据，单位（g）*/
+    float accel_z; /**< imu加速度计z轴数据，单位（g）*/
 
-    float gyro_x; /**< imu陀螺仪x，y，z三轴数据，单位（弧度/秒）*/
-    float gyro_y;
-    float gyro_z;
+    float gyro_x; /**< imu陀螺仪x轴数据，单位（弧度/秒）*/
+    float gyro_y; /**< imu陀螺仪y轴数据，单位（弧度/秒）*/
+    float gyro_z; /**< imu陀螺仪z轴数据，单位（弧度/秒）*/
 };
 
 
@@ -46,12 +46,16 @@ struct ImuData{
  * */
 class BinoCamera {
 public:
-    /*
+    /**
      *@brief BinoCamera 构造函数
      *@param paraList 传入的相机启动参数
      * */
 	BinoCamera(BinoCameraParameterList paraList);
 	virtual ~BinoCamera();
+	/**
+     *@brief 抓取一次相机数据，需要在主循环中调用
+     * */
+	void Grab();
     /**
      *@brief 得到双目原始图像
      *@param L 返回左相机图像
@@ -96,7 +100,7 @@ public:
 	  @param imudatas imu的原始数据
 	  @param timestamp 图像帧曝光时刻的时间 
 	 * */
-	void getImuRawData(std::vector<ImuData> &imudatas, int32_t &timestamp);
+	void getImuRawData(std::vector<ImuData> &imuDatas, uint32_t &timestamp);
 	/**
 	  @brief imu解算程序 
 	  @param imu imu原始数据
@@ -104,7 +108,10 @@ public:
 	  @param q 四元数
 	 * */
 	void ImuRect(ImuData imu,float timestamp,float *q);
-
+private:
+	cv::Mat LeftImg,RightImg;
+	std::vector<ImuData> ImuDatas;
+	uint32_t TimeStamp;
 };
 
 #endif /* SDKLINK_SDKSRC_BINOCAMERA_H_ */
