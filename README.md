@@ -104,7 +104,7 @@ $roslaunch bino_stereo_ros rviz_imu.launch
 [链接](https://item.taobao.com/item.htm?spm=a230r.1.14.36.30447e471pexT6&id=562336856228&ns=1&abbucket=1#detail)
 
 
-## 6.论文参考
+## 6.相关论文
 * Cai Luo, Leijian Yu, Peng Ren, A Vision-aided Approach to Perching a Bio-inspired Unmanned Aerial Vehicle, IEEE Transactions on Industrial Electronics, DOI: 10.1109/TIE.2017.2764849.
 * Cai Luo, Xiu Li, Yipeng Li, Qionghai Dai, Biomimetic Design for Unmanned Aerial Vehicle SafeLanding in Hazardous Terrain, IEEE/ASME Transactions on Mechatronics, 2016.02.01, 21(1):31 541.
 * Cai Luo, Xiu Li, Qionghai Dai, Biology’s drones: New and improved, Science, 2014.6.20, 344(6190):1351 1351.
