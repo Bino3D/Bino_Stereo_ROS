@@ -22,6 +22,7 @@ struct BinoCameraParameterList{
     std::string devPath = "/dev/video0";  /**< 设备节点地址 */
     std::string extParameterPath = "";    /**< 相机标定外参文件所在地址*/
     std::string intParameterPath = "";    /**< 相机标定内参文件所在地址*/
+    std::string fisheyeParameterPath = "";    /**< 相机标定内参文件所在地址*/
 };
 
 /**
@@ -68,7 +69,7 @@ public:
      @param R 返回右相机矫正后图像
      * */
 	void getRectImage(cv::Mat& L, cv::Mat& R);
-    /**
+	/**
      @brief 得到得到视差图 
      @param rectLeft 输入左相机矫正后图像
      @param rectRight 输入右相机矫正后图像
@@ -101,6 +102,10 @@ public:
 	  @param timestamp 图像帧曝光时刻的时间 
 	 * */
 	void getImuRawData(std::vector<ImuData> &imuDatas, uint32_t &timestamp);
+	/**
+	  @brief 得到图像帧曝光时刻的时间
+	 * */
+	uint32_t getImgTime();
 	/**
 	  @brief imu解算程序 
 	  @param imu imu原始数据
