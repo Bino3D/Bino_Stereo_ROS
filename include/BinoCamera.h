@@ -26,6 +26,25 @@ struct BinoCameraParameterList{
 };
 
 /**
+ *@brief 测距参数表述结构体  
+ *
+ * */
+typedef struct winpar{
+	cv::Point3d size; /**< 测距窗口的长度，宽度，最远探测距离(size.x, size.y, size.z) */
+	double pitch; /**< camera与水平面偏移角度 */
+}WindowsParams;
+
+typedef struct nerapot{
+	cv::Point3d point;
+	double range;
+	double angle;
+}NearestPoints;
+
+typedef struct classfic{
+	cv::Point3d range_min;
+	int num_point;
+}ClassIfication;
+/**
  *@brief imu数据结构体 
  * */
 struct ImuData{
@@ -69,16 +88,18 @@ public:
      @param R 返回右相机矫正后图像
      * */
 	void getRectImage(cv::Mat& L, cv::Mat& R);
+    /**
+     @brief 得到双目鱼眼畸变矫正后图像
+     @param L 返回左相机矫正后图像
+     @param R 返回右相机矫正后图像
+     * */
+	void getRectFisheyeImage(cv::Mat& L, cv::Mat& R);
 	/**
      @brief 得到得到视差图 
-     @param rectLeft 输入左相机矫正后图像
-     @param rectRight 输入右相机矫正后图像
      @param disparateU16Mat 返回uint16类型的视差图，想得到真实视差值需要转换为float型数据，转换例子：
       matU16.convertTo( matF32, CV_32F, 1.0/16);
      * */
-	void getDisparity(const cv::Mat& rectLeft,
-			const cv::Mat& rectRight,
-			cv::Mat& disparateU16Mat);
+	void getDisparity(cv::Mat& disparateU16Mat);
     /**
      @brief 获取相机参数 
      @param para 返回Mat数据的类型为CV_64FC1，row = 1, col = 7，数据内容为：
@@ -113,8 +134,31 @@ public:
 	  @param q 四元数
 	 * */
 	void ImuRect(ImuData imu,float timestamp,float *q);
+	/**
+	  @brief 得到距离camera最近的点 
+	  @param params 距离测量的相关参数
+	  @param points 视窗内所有点的集合
+	  @param nearpoint 距离camera最近的点的实际坐标(单位：m)
+	 * */
+	void getNearestPoint(WindowsParams& params, NearestPoints* points, cv::Point3d& nearpoint);
+	/**
+	  @brief 距离检测功能可视化 
+	  @param params 距离测量的相关参数
+	  @param nearpoint 距离camera最近的点的实际坐标(单位：m)
+	  @param PointImage 返回可视化距离检测图像
+	 * */
+	void getPointImage(NearestPoints* points, cv::Point3d nearpoint, cv::Mat& PointImage);
+	/**
+	  @brief 双目标定 
+	  @param imagelist 存储标定使用图像名称的容器
+	  @param boardSize 使用的棋盘格的规格，写入格式为: boardSize = Size((一行棋盘格的个数 - 1), (一列棋盘格的个数 - 1));
+	  @param squareSize 使用的棋盘格每个格子的大小(单位: m)
+	 * */
+	void StartStereoCalib(const std::vector<std::string>& imagelist, cv::Size boardSize, const float squareSize);
 private:
-	cv::Mat LeftImg,RightImg;
+	cv::Mat LeftImg, RightImg, LeftRect, RightRect, DispImg;
+	int cnt;
+	ClassIfication object[360];
 	std::vector<ImuData> ImuDatas;
 	uint32_t TimeStamp;
 };
